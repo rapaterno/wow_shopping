@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:wow_shopping/backend/backend.dart';
+import 'package:wow_shopping/backend/auth_repo.dart';
 import 'package:wow_shopping/widgets/app_button.dart';
 import 'package:wow_shopping/widgets/common.dart';
+import 'package:watch_it/watch_it.dart';
 
 @immutable
 class AccountPage extends StatefulWidget {
@@ -24,7 +25,7 @@ class _AccountPageState extends State<AccountPage> {
             verticalMargin48,
             verticalMargin48,
             AppButton(
-              onPressed: () => authRepo.logout(),
+              onPressed: () => di<AuthRepo>().logout(),
               label: 'Logout',
             ),
           ],

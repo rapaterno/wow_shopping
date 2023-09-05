@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:watch_it/watch_it.dart';
 import 'package:wow_shopping/app/assets.dart';
-import 'package:wow_shopping/backend/backend.dart';
+import 'package:wow_shopping/backend/abstract/product_repo.dart';
 import 'package:wow_shopping/features/home/widgets/promo_carousel.dart';
 import 'package:wow_shopping/features/main/main_screen.dart';
+import 'package:wow_shopping/features/main/manager/bottom_nav_bar_manager.dart';
 import 'package:wow_shopping/models/product_item.dart';
 import 'package:wow_shopping/widgets/app_icon.dart';
 import 'package:wow_shopping/widgets/category_nav_list.dart';
@@ -28,9 +30,9 @@ class _HomePageState extends State<HomePage> {
   void _onPromoPressed(PromoModel promo) {
     // FIXME: demo of gotoSection
     if (promo.asset == Assets.promo1) {
-      MainScreen.of(context).gotoSection(NavItem.wishlist);
+      di<BottomNavBarManager>().goToSectionCommand.execute(NavItem.wishlist);
     } else if (promo.asset == Assets.promo2) {
-      MainScreen.of(context).gotoSection(NavItem.cart);
+      di<BottomNavBarManager>().goToSectionCommand.execute(NavItem.cart);
     }
   }
 
@@ -102,14 +104,15 @@ class _SliverTopSellingState extends State<SliverTopSelling> {
   @override
   void initState() {
     super.initState();
-    _futureTopSelling = productsRepo.fetchTopSelling();
+    _futureTopSelling = di<AbstractProductsRepo>().fetchTopSelling();
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<ProductItem>>(
       future: _futureTopSelling,
-      builder: (BuildContext context, AsyncSnapshot<List<ProductItem>> snapshot) {
+      builder:
+          (BuildContext context, AsyncSnapshot<List<ProductItem>> snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const SliverFillRemaining(
             child: Center(

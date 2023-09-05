@@ -12,36 +12,31 @@ import 'package:wow_shopping/backend/wishlist_repo.dart';
 
 /// FIXME: Very similar to the [WishlistRepo] and should be refactored out and simplified
 class CartRepo {
-  CartRepo._(this._file, this._storage);
-
-  final File _file;
-  CartStorage _storage;
+  late final File _file;
+  late CartStorage _storage;
   late StreamController<List<CartItem>> _cartController;
   Timer? _saveTimer;
 
-  static Future<CartRepo> create() async {
-    CartStorage storage;
+  Future<CartRepo> init() async {
     try {
       final dir = await path_provider.getApplicationDocumentsDirectory();
-      final file = File(path.join(dir.path, 'cart.json'));
-      if (await file.exists()) {
-        storage = CartStorage.fromJson(
-          json.decode(await file.readAsString()),
+      _file = File(path.join(dir.path, 'cart.json'));
+      if (await _file.exists()) {
+        _storage = CartStorage.fromJson(
+          json.decode(await _file.readAsString()),
         );
       } else {
-        storage = CartStorage.empty;
+        _storage = CartStorage.empty;
       }
-      return CartRepo._(file, storage)..init();
+
+      _cartController = StreamController<List<CartItem>>.broadcast(
+        onListen: () => _emitCart(),
+      );
+      return this;
     } catch (error, stackTrace) {
       print('$error\n$stackTrace'); // Send to server?
       rethrow;
     }
-  }
-
-  void init() {
-    _cartController = StreamController<List<CartItem>>.broadcast(
-      onListen: () => _emitCart(),
-    );
   }
 
   void _emitCart() {
@@ -54,7 +49,8 @@ class CartRepo {
 
   Decimal get currentCartTotal => _calculateCartTotal(currentCartItems);
 
-  Stream<Decimal> get streamCartTotal => streamCartItems.map(_calculateCartTotal);
+  Stream<Decimal> get streamCartTotal =>
+      streamCartItems.map(_calculateCartTotal);
 
   Decimal _calculateCartTotal(List<CartItem> items) {
     return items.fold<Decimal>(Decimal.zero, (prev, el) => prev + el.total);
@@ -62,14 +58,16 @@ class CartRepo {
 
   CartItem cartItemForProduct(ProductItem item) {
     return _storage.items //
-        .firstWhere((el) => el.product.id == item.id, orElse: () => CartItem.none);
+        .firstWhere((el) => el.product.id == item.id,
+            orElse: () => CartItem.none);
   }
 
   bool cartContainsProduct(ProductItem item) {
     return cartItemForProduct(item) != CartItem.none;
   }
 
-  void addToCart(ProductItem item, {ProductOption option = ProductOption.none}) {
+  void addToCart(ProductItem item,
+      {ProductOption option = ProductOption.none}) {
     final existingItem = cartItemForProduct(item);
     if (existingItem != CartItem.none) {
       updateQuantity(item.id, existingItem.quantity + 1);

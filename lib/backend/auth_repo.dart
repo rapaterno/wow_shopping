@@ -2,17 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:watch_it/watch_it.dart';
 import 'package:wow_shopping/backend/api_service.dart';
 import 'package:wow_shopping/models/user.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as path;
 
 class AuthRepo {
-  AuthRepo(this._apiService, this._file, this._currentUser);
-
-  final ApiService _apiService;
-  final File _file;
-  User _currentUser;
+  late final File _file;
+  late User _currentUser;
 
   Timer? _saveTimer;
   late StreamController<User> _userController;
@@ -29,36 +27,34 @@ class AuthRepo {
   // FIXME: this should come from storage
   String get token => '123';
 
-  static Future<AuthRepo> create(ApiService apiService) async {
-    User currentUser;
-    File file;
+  Future<AuthRepo> init() async {
     try {
       final dir = await path_provider.getApplicationDocumentsDirectory();
-      file = File(path.join(dir.path, 'user.json'));
+      _file = File(path.join(dir.path, 'user.json'));
     } catch (error, stackTrace) {
       print('$error\n$stackTrace'); // Send to server?
       rethrow;
     }
     try {
-      if (await file.exists()) {
-        currentUser = User.fromJson(
-          json.decode(await file.readAsString()),
+      if (await _file.exists()) {
+        _currentUser = User.fromJson(
+          json.decode(await _file.readAsString()),
         );
       } else {
-        currentUser = User.none;
+        _currentUser = User.none;
       }
+
+      _userController = StreamController<User>.broadcast(
+        onListen: () => _emitUser(_currentUser),
+      );
+
+      return this;
     } catch (error, stackTrace) {
       print('$error\n$stackTrace'); // Send to server?
-      file.delete();
-      currentUser = User.none;
+      _file.delete();
+      _currentUser = User.none;
+      rethrow;
     }
-    return AuthRepo(apiService, file, currentUser)..init();
-  }
-
-  void init() {
-    _userController = StreamController<User>.broadcast(
-      onListen: () => _emitUser(_currentUser),
-    );
   }
 
   void _emitUser(User value) {
@@ -69,7 +65,7 @@ class AuthRepo {
 
   Future<void> login(String username, String password) async {
     try {
-      _emitUser(await _apiService.login(username, password));
+      _emitUser(await di<ApiService>().login(username, password));
     } catch (error) {
       // FIXME: show user error, change state? rethrow?
     }
@@ -77,7 +73,7 @@ class AuthRepo {
 
   Future<void> logout() async {
     try {
-      await _apiService.logout();
+      await di<ApiService>().logout();
     } catch (error) {
       // FIXME: failed to logout? report to server
     }

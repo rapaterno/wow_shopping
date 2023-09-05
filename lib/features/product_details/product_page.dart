@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:watch_it/watch_it.dart';
 import 'package:wow_shopping/app/theme.dart';
+import 'package:wow_shopping/backend/abstract/product_repo.dart';
+import 'package:wow_shopping/backend/cart_repo.dart';
 import 'package:wow_shopping/models/product_item.dart';
 import 'package:wow_shopping/widgets/app_button.dart';
 import 'package:wow_shopping/widgets/common.dart';
@@ -8,7 +11,6 @@ import 'package:wow_shopping/widgets/product_card.dart';
 import 'package:wow_shopping/widgets/product_image.dart';
 import 'package:wow_shopping/widgets/sliver_expansion_tile.dart';
 import 'package:wow_shopping/widgets/wishlist_button.dart';
-import 'package:wow_shopping/backend/backend.dart';
 
 @immutable
 class ProductPage extends StatelessWidget {
@@ -102,7 +104,7 @@ class ProductPage extends StatelessWidget {
             const _SliverDivider(),
             //
             _SliverSimilarItems(
-              similarItems: context.productsRepo.cachedItems,
+              similarItems: di<AbstractProductsRepo>().cachedItems,
             ),
             //
             const SliverSafeArea(
@@ -160,7 +162,8 @@ class _AppBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _AppBarDelegate oldDelegate) => false;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Material(
       child: Ink(
         decoration: const BoxDecoration(
@@ -318,10 +321,12 @@ class _SliverProductPhotoGallery extends StatefulWidget {
   final ProductItem item;
 
   @override
-  State<_SliverProductPhotoGallery> createState() => _SliverProductPhotoGalleryState();
+  State<_SliverProductPhotoGallery> createState() =>
+      _SliverProductPhotoGalleryState();
 }
 
-class _SliverProductPhotoGalleryState extends State<_SliverProductPhotoGallery> {
+class _SliverProductPhotoGalleryState
+    extends State<_SliverProductPhotoGallery> {
   late int _selectedIndex;
 
   @override
@@ -499,7 +504,7 @@ class _SliverProductSizeSelector extends StatelessWidget {
                 onPressed: () {
                   // FIXME: add product to cart
                   // FIXME: specify option for size
-                  context.cartRepo.addToCart(item);
+                  di<CartRepo>().addToCart(item);
                 },
                 label: 'Add to cart',
                 style: AppButtonStyle.highlighted,
