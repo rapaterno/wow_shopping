@@ -1,4 +1,5 @@
 import 'package:decimal/decimal.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:wow_shopping/utils/formatting.dart';
@@ -6,7 +7,7 @@ import 'package:wow_shopping/utils/formatting.dart';
 part 'product_item.g.dart';
 
 @JsonSerializable()
-class ProductItem {
+class ProductItem extends Equatable {
   const ProductItem({
     required this.id,
     required this.category,
@@ -51,10 +52,23 @@ class ProductItem {
 
   @override
   String toString() => '${describeIdentity(this)}{${toJson()}}';
+
+  @override
+  List<Object?> get props => [
+        id,
+        category,
+        title,
+        subTitle,
+        price,
+        priceWithTax,
+        photos,
+        description,
+        options
+      ];
 }
 
 @JsonSerializable()
-class ProductOption {
+class ProductOption extends Equatable {
   const ProductOption({
     required this.id,
     required this.name,
@@ -71,4 +85,7 @@ class ProductOption {
 
   @override
   String toString() => '${describeIdentity(this)}{${toJson()}}';
+
+  @override
+  List<Object?> get props => [id, name];
 }

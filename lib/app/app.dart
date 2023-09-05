@@ -69,7 +69,18 @@ class _ShopWowAppState extends State<ShopWowApp> {
       navigatorState.pushAndRemoveUntil(LoginScreen.route(), (route) => false);
     } else if (!_isLoggedIn && newIsLoggedIn) {
       _isLoggedIn = newIsLoggedIn;
-      navigatorState.pushAndRemoveUntil(MainScreen.route(), (route) => false);
+      navigatorState.pushAndRemoveUntil(PageRouteBuilder(
+        pageBuilder: (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+        ) {
+          return FadeTransition(
+            opacity: animation,
+            child: const MainScreen(),
+          );
+        },
+      ), (route) => false);
     }
   }
 
@@ -101,7 +112,18 @@ class _ShopWowAppState extends State<ShopWowApp> {
                     if (!_isLoggedIn) {
                       return LoginScreen.route();
                     }
-                    return MainScreen.route();
+                    return PageRouteBuilder(
+                      pageBuilder: (
+                        BuildContext context,
+                        Animation<double> animation,
+                        Animation<double> secondaryAnimation,
+                      ) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: const MainScreen(),
+                        );
+                      },
+                    );
                   } else {
                     return null; // Page not found
                   }
