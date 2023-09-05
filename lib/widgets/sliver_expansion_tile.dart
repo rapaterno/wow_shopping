@@ -49,19 +49,19 @@ class SliverExpansionTileHost extends StatefulWidget {
 }
 
 class _SliverExpansionTileHostState extends State<SliverExpansionTileHost> {
-  late final _controller = SliverExpansionTileController(
-    widget.initialExpanded,
-  );
-  var _sections = <String>{};
+  late SliverExpansionTileController _controller;
+  late Set<String> _sections;
 
   @override
   void initState() {
     super.initState();
+    _controller = SliverExpansionTileController(widget.initialExpanded);
     _controller.addListener(_controllerUpdated);
+    _controllerUpdated();
   }
 
   void _controllerUpdated() {
-    setState(() => _sections = Set.of(_controller._expandedSections));
+    setState(() => _sections = _controller._expandedSections.toSet());
   }
 
   @override
@@ -105,6 +105,35 @@ class _InheritedSliverExpansionTile extends InheritedModel<String> {
   bool updateShouldNotifyDependent(
       covariant _InheritedSliverExpansionTile oldWidget, Set<String> dependencies) {
     return (sections.containsAll(dependencies) != oldWidget.sections.containsAll(dependencies));
+  }
+}
+
+class SliverExpansionTile extends StatelessWidget {
+  const SliverExpansionTile({
+    super.key,
+    required this.section,
+    required this.headerBuilder,
+    required this.contentBuilder,
+  });
+
+  final String section;
+  final Widget Function(BuildContext context, String section, bool expanded) headerBuilder;
+  final WidgetBuilder contentBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverExpansionTileHeader(
+          section: section,
+          builder: headerBuilder,
+        ),
+        SliverExpansionTileContent(
+          section: section,
+          sliverBuilder: contentBuilder,
+        ),
+      ],
+    );
   }
 }
 
