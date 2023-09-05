@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wow_shopping/app/theme.dart';
+import 'package:wow_shopping/backend/cart_repo.dart';
 import 'package:wow_shopping/models/product_item.dart';
 import 'package:wow_shopping/widgets/app_button.dart';
 import 'package:wow_shopping/widgets/common.dart';
@@ -11,7 +13,7 @@ import 'package:wow_shopping/widgets/wishlist_button.dart';
 import 'package:wow_shopping/backend/backend.dart';
 
 @immutable
-class ProductPage extends StatelessWidget {
+class ProductPage extends ConsumerWidget {
   const ProductPage._({
     required this.item,
   });
@@ -48,7 +50,7 @@ class ProductPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       child: SliverExpansionTileHost(
         initialExpanded: const ['description'],
@@ -102,7 +104,7 @@ class ProductPage extends StatelessWidget {
             const _SliverDivider(),
             //
             _SliverSimilarItems(
-              similarItems: context.productsRepo.cachedItems,
+              similarItems: ref.read(productRepoProvider).cachedItems,
             ),
             //
             const SliverSafeArea(
@@ -160,7 +162,8 @@ class _AppBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _AppBarDelegate oldDelegate) => false;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Material(
       child: Ink(
         decoration: const BoxDecoration(
@@ -318,10 +321,12 @@ class _SliverProductPhotoGallery extends StatefulWidget {
   final ProductItem item;
 
   @override
-  State<_SliverProductPhotoGallery> createState() => _SliverProductPhotoGalleryState();
+  State<_SliverProductPhotoGallery> createState() =>
+      _SliverProductPhotoGalleryState();
 }
 
-class _SliverProductPhotoGalleryState extends State<_SliverProductPhotoGallery> {
+class _SliverProductPhotoGalleryState
+    extends State<_SliverProductPhotoGallery> {
   late int _selectedIndex;
 
   @override
@@ -422,7 +427,7 @@ class _PhotoGalleryItem extends StatelessWidget {
 }
 
 @immutable
-class _SliverProductSizeSelector extends StatelessWidget {
+class _SliverProductSizeSelector extends ConsumerWidget {
   const _SliverProductSizeSelector({
     required this.item,
   });
@@ -432,7 +437,7 @@ class _SliverProductSizeSelector extends StatelessWidget {
   static const _sizes = [6, 7, 8, 9, 10, 11, 12, 13];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SliverToBoxAdapter(
       child: DecoratedBox(
         decoration: const BoxDecoration(
@@ -499,7 +504,7 @@ class _SliverProductSizeSelector extends StatelessWidget {
                 onPressed: () {
                   // FIXME: add product to cart
                   // FIXME: specify option for size
-                  context.cartRepo.addToCart(item);
+                  ref.read(cartRepoProvider).addToCart(item);
                 },
                 label: 'Add to cart',
                 style: AppButtonStyle.highlighted,

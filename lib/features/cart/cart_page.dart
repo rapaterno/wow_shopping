@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:wow_shopping/backend/backend.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:wow_shopping/backend/cart_repo.dart';
 import 'package:wow_shopping/features/cart/checkout_page.dart';
 import 'package:wow_shopping/features/cart/widgets/cart_item.dart';
 import 'package:wow_shopping/features/cart/widgets/cart_page_layout.dart';
@@ -9,54 +11,62 @@ import 'package:wow_shopping/widgets/app_button.dart';
 import 'package:wow_shopping/widgets/common.dart';
 import 'package:wow_shopping/widgets/top_nav_bar.dart';
 
+final currentCartProvider = StreamProvider<List<CartItem>>((ref) async* {
+  final cartRepo = ref.watch(cartRepoProvider);
+
+  final stream = cartRepo.streamCartItems;
+
+  yield [];
+
+  await for (final items in stream) {
+    yield items;
+  }
+});
+
 @immutable
-class CartPage extends StatefulWidget {
+class CartPage extends ConsumerWidget {
   const CartPage({super.key});
 
   @override
-  State<CartPage> createState() => _CartPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentCart = ref.watch(currentCartProvider);
 
-class _CartPageState extends State<CartPage> {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<CartItem>>(
-      initialData: cartRepo.currentCartItems,
-      stream: cartRepo.streamCartItems,
-      builder: (BuildContext context, AsyncSnapshot<List<CartItem>> snapshot) {
-        final items = snapshot.requireData;
-        return Material(
-          child: CartPageLayout(
-            checkoutPanel: CheckoutPanel(
-              onPressed: () {
-                Navigator.of(context).push(CheckoutPage.route());
-              },
-              label: 'Checkout',
-            ),
-            content: CustomScrollView(
-              slivers: [
-                SliverTopNavBar(
-                  title: items.isEmpty
-                      ? const Text('No items in your cart')
-                      : Text('${items.length} items in your cart'),
-                  pinned: true,
-                  floating: true,
-                ),
-                const SliverToBoxAdapter(
-                  child: _DeliveryAddressCta(
-                      // FIXME: onChangeAddress ?
+    return Material(
+      child: CartPageLayout(
+        checkoutPanel: CheckoutPanel(
+          onPressed: () {
+            Navigator.of(context).push(CheckoutPage.route());
+          },
+          label: 'Checkout',
+        ),
+        content: currentCart.when(
+            data: (items) => CustomScrollView(
+                  slivers: [
+                    SliverTopNavBar(
+                      title: items.isEmpty
+                          ? const Text('No items in your cart')
+                          : Text('${items.length} items in your cart'),
+                      pinned: true,
+                      floating: true,
+                    ),
+                    const SliverToBoxAdapter(
+                      child: _DeliveryAddressCta(
+                          // FIXME: onChangeAddress ?
+                          ),
+                    ),
+                    if (items.isEmpty)
+                      const SliverToBoxAdapter(
+                          child: Center(child: Text('No items in your cart'))),
+                    for (final item in items) //
+                      SliverCartItemView(
+                        key: Key(item.product.id),
+                        item: item,
                       ),
+                  ],
                 ),
-                for (final item in items) //
-                  SliverCartItemView(
-                    key: Key(item.product.id),
-                    item: item,
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
+            error: (_, __) => const Center(child: Text('error')),
+            loading: () => const Center(child: CircularProgressIndicator())),
+      ),
     );
   }
 }

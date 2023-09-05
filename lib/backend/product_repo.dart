@@ -1,8 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wow_shopping/app/assets.dart';
 import 'package:wow_shopping/models/product_item.dart';
+
+final productRepoProvider =
+    Provider<ProductsRepo>((ref) => throw UnimplementedError());
 
 class ProductsRepo {
   ProductsRepo(this._products);

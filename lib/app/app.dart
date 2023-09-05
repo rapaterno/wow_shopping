@@ -3,11 +3,13 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:wow_shopping/app/config.dart';
 import 'package:wow_shopping/app/theme.dart';
 import 'package:wow_shopping/backend/backend.dart';
+import 'package:wow_shopping/backend/cart_repo.dart';
 import 'package:wow_shopping/features/login/login_screen.dart';
 import 'package:wow_shopping/features/main/main_screen.dart';
 import 'package:wow_shopping/features/splash/splash_screen.dart';
@@ -91,21 +93,31 @@ class _ShopWowAppState extends State<ShopWowApp> {
           } else {
             return BackendInheritedWidget(
               backend: snapshot.requireData,
-              child: MaterialApp(
-                debugShowCheckedModeBanner: false,
-                navigatorKey: _navigatorKey,
-                title: _appTitle,
-                theme: generateLightTheme(),
-                onGenerateRoute: (RouteSettings settings) {
-                  if (settings.name == Navigator.defaultRouteName) {
-                    if (!_isLoggedIn) {
-                      return LoginScreen.route();
+              child: ProviderScope(
+                overrides: [
+                  productRepoProvider
+                      .overrideWithValue(snapshot.requireData.productsRepo),
+                  wishlistRepoProvider
+                      .overrideWithValue(snapshot.requireData.wishlistRepo),
+                  cartRepoProvider
+                      .overrideWithValue(snapshot.requireData.cartRepo),
+                ],
+                child: MaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  navigatorKey: _navigatorKey,
+                  title: _appTitle,
+                  theme: generateLightTheme(),
+                  onGenerateRoute: (RouteSettings settings) {
+                    if (settings.name == Navigator.defaultRouteName) {
+                      if (!_isLoggedIn) {
+                        return LoginScreen.route();
+                      }
+                      return MainScreen.route();
+                    } else {
+                      return null; // Page not found
                     }
-                    return MainScreen.route();
-                  } else {
-                    return null; // Page not found
-                  }
-                },
+                  },
+                ),
               ),
             );
           }
